@@ -61,7 +61,8 @@ class Spring:
         return 1/2 * self.k * (self.L - self.L_1)**2 
 
 class Universe:
-    def __init__(self, Masses, Springs, dt, box_dims = [10, 10, 10], K_G=1e5, g=-9.812, grav=False, damping = 0):
+    def __init__(self, Masses, Springs, dt, box_dims = [10, 10, 10],
+                 K_G=1e5, g=-9.812, grav=False, damping = 0, mu=1.0):
         self.Masses = Masses
         self.Springs = Springs
         self.dt = dt
@@ -70,6 +71,7 @@ class Universe:
         self.g = g # gravitational constant
         self.grav = grav
         self.damping = damping
+        self.mu = mu # coefficient of friction
         
         self.DIMENSIONS = 3
         
@@ -84,6 +86,21 @@ class Universe:
         self.potential_springs = 0
         self.potential_gravity = 0
         self.energies = [] # kinetic, spring potential (including bounds), gravitational potential
+            
+    def calculate_mass_center(self):
+        """
+        Loop through all masses and return the center of mass
+        """
+        pass
+
+    def normalize_2d(self, p):
+        x, y = p
+        
+        if x==y==0:
+            return p
+        
+        mag = (x**2 + y**2)**0.5
+        return [x/mag, y/mag]
 
     def normalize(self, p):
         x, y, z = p
@@ -93,9 +110,10 @@ class Universe:
         
         mag = (x**2 + y**2 + z**2)**0.5
         return [x/mag, y/mag, z/mag]
-        
+
     def integration_step(self, t=0, verbose=False):
         # velocity and position carry over, Force and acceleraton are recalculated at each time step
+        
         # reset forces and accelerations
         for m in self.Masses:
             m.F = [0, 0, 0]
@@ -128,6 +146,7 @@ class Universe:
             s.m1.F[2] += m1_force[2] # z
             
             # force on m2
+#             m2_direction = [s.m2.p[0] - s.m1.p[0], s.m2.p[1] - s.m1.p[1]]
             m2_direction = [s.m1.p[0] - s.m2.p[0], s.m1.p[1] - s.m2.p[1], s.m1.p[2] - s.m2.p[2]]
 
             m2_direction = self.normalize(m2_direction)
@@ -139,47 +158,10 @@ class Universe:
             
             ### add spring potential energy
             self.potential_springs += s.energy()
-
+        
         ### update Mass Forces
         for m in self.Masses:
-            ### boundary collision forces
-            # x dimension right wall
-            if m.p[0] > self.box_dims[0]:
-                m.F[0] += self.K_G * (self.box_dims[0] - m.p[0])
-                
-                self.potential_springs += 1/2 * self.K_G * (self.box_dims[0] - m.p[0])**2
-                
-            # ground
-            if m.p[2] < 0:
-                m.F[2] += self.K_G * (0 - m.p[2])
-                
-                self.potential_springs += 1/2 * self.K_G * (0 - m.p[2])**2
-                
             
-            # y dimension left wall
-            if m.p[1] < 0:
-                m.F[1] += self.K_G * (0 - m.p[1])
-                
-                self.potential_springs += 1/2 * self.K_G * (0 - m.p[1])**2
-                
-            # y dimension right wall
-            if m.p[1] > self.box_dims[1]:
-                m.F[1] += self.K_G * (self.box_dims[1] - m.p[1])
-                
-                self.potential_springs += 1/2* self.K_G * (self.box_dims[1] - m.p[1])**2
-        
-            # x dimension left wall
-            if m.p[0] < 0:
-                m.F[0] += self.K_G * (0 - m.p[0])
-                
-                self.potential_springs += 1/2 * self.K_G * (0 - m.p[0])**2
-        
-            # ceiling
-            if m.p[2] > self.box_dims[2]:
-                m.F[2] += self.K_G * (self.box_dims[2] - m.p[2])
-                
-                self.potential_springs += 1/2 * (self.box_dims[2] - m.p[2])**2
-        
             ### gravity
             if self.grav:
                 m.F[2] += self.g * m.m
@@ -189,11 +171,26 @@ class Universe:
                 
                 # calculate kinetic energy
                 self.kinetic += 1/2 * m.m * (m.v[0]**2 + m.v[1]**2 + m.v[2]**2)
+                
+            # ground
+            if m.p[2] < 0:
+                # normal force
+                normal_force = self.K_G * (0 - m.p[2])
+                m.F[2] += normal_force
+                # calculate elastic energy
+                self.potential_springs += 1/2 * self.K_G * (0 - m.p[2])**2
 
-            ### (to-do: add additional forces)
+                ## calculate friction force
+                if not (m.p[0] == 0 and m.p[1] == 0):
+                    # calculate direction of movement
+                    x_normed, y_normed = self.normalize_2d(m.v[:2]) 
+                    # oppose x direction
+                    m.F[0] -= x_normed * self.mu * normal_force
+
+                    # oppose y direction
+                    m.F[1] -= y_normed * self.mu * normal_force
             
         ### calculate energies (note: should this be before or after the points are adjusted?)
-
         ### update a, v, p
         for m in self.Masses:
             # update acceleration
@@ -220,7 +217,7 @@ class Universe:
             for m in self.Masses:
                 print(f"m.F = {m.F}, m.a = {m.a}, m.v = {m.v}, m.p = {m.p}")
                 
-        # return energies [kinetic, spring potential (including bounds), grav potential]
+        # return eneergies [kinetic, spring potential (including bounds), grav potential]
         return [self.kinetic, self.potential_springs, self.potential_gravity]
 
     def get_points(self):
@@ -255,6 +252,7 @@ class Universe:
                 color = 'blue'
             ax.plot3D(x, y, z, color=color)
 
+        
         # display or save
         if save:
             fig.savefig(filename)
@@ -269,17 +267,24 @@ class Universe:
         
         returns a list of 
         """
-        digit_length = len(str(len(t)))
+        
+        length = len(t)
+        
+        digit_length = len(str(length))
         
         for i, t_ in enumerate(t):
             # do integration step
             energies = self.integration_step(t=t_, verbose=verbose)
+            
             self.energies.append(energies)
             
             # get filename
             i_str = str(i)
             num_digits = len(i_str)
+            
             frame_filename = filename + '0'*(digit_length - num_digits) + i_str
+            
+            self.display_frame(save=save, filename=frame_filename)
 
             self.points.append([m.p.copy() for m in self.Masses])
             
