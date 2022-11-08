@@ -1,0 +1,12 @@
+name: softbots
+channels:
+    - conda-forge
+    - pytorch3d
+    - fastai
+dependencies:
+    - pytorch3d
+    - opencv-python-headless
+    - matplotlib
+    - numpy
+    - pytorch
+    - tqdm
