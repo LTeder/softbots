@@ -20,7 +20,7 @@ from pytorch3d.renderer import (
 
 
 class RenderBot:
-    def __init__(self):
+    def __init__(self, view = [30, 30, 60], at = [1.0, 0, -0.25]):
         # Select PyTorch device
         if torch.cuda.is_available():
             self.device = torch.device("cuda:0")
@@ -37,8 +37,7 @@ class RenderBot:
         self.cube_textures = None
         self.ground = None
         # Instantiate renderer objects
-        R, T = look_at_view_transform(14, 30, 60,
-                                      up = [[0, 0, 1]], at = [[-1.2, 0, -0.5]]) 
+        R, T = look_at_view_transform(*view, up = [[0, 0, 1]], at = [at]) 
         cameras = FoVPerspectiveCameras(device = self.device, R = R, T = T)
         raster_settings = RasterizationSettings(
             image_size = 512, blur_radius = 0.0, faces_per_pixel = 1)
@@ -122,51 +121,96 @@ class RenderBot:
             recorder.release()
         if self.use_tqdm:
             progress.close()
+            
+    # Builds ground mesh, a green 40 x 40 plane at z = 0
+    def build_ground(self):
+        plane_verts = torch.Tensor(
+            [[-20.0, 20.0, 0.0], [-20.0, -20.0, 0.0],
+             [20.0, -20.0, 0.0], [20.0, 20.0, 0.0]]).to(self.device)
+        plane_faces = torch.Tensor([[0, 1, 2], [2, 3, 0]]).to(self.device)
+        self.ground = Meshes(verts = plane_verts[None], faces = plane_faces[None])
+        plane_verts_rgb = torch.ones_like(self.ground.verts_list()[0])[None]
+        plane_verts_rgb[0, :, :] /= 8
+        plane_verts_rgb[0, :, 1] *= 5 # Green
+        self.ground.textures = TexturesVertex(
+            verts_features = plane_verts_rgb.to(self.device))
 
     # Renders a video from a .pt file containing frames/animation of a cubeoid mesh
-    def render_from_file(self, input_fn, result_fn, fps = 1000):
+    def render_from_file(self, input_fn, result_fn, fps = 1000, every = 1):
         assert not self.frames # Assumes it is empty at call time
+        assert every > 0
         input_fn = Path(input_fn)
         assert input_fn.exists() and input_fn.suffix == ".pt"
         coords = torch.tensor(torch.load(str(input_fn))).to(self.device).float()
-        print(f"Input shape: {coords.shape}")
+        skip_shape = [*coords.shape]
+        skip_shape[0] = int(skip_shape[0] / every)
+        print(f"Input shape after skip: {skip_shape}")
+        if skip_shape[1] == 8:
+            # Crossed single cube
+            springs = [[0, 1], [0, 2], [1, 3], [2, 3], # Square 1
+                       [4, 5], [4, 6], [5, 7], [6, 7], # Square 2
+                       [0, 4], [1, 5], [2, 6], [3, 7], # Depth between squares
+                       [0, 7], [1, 6], [2, 5], [3, 4]] # Diagonals
+        elif skip_shape[1] == 16:
+            # Crossed triple-cube, as in RandomSearchRobot
+            springs = [(0, 1), (2, 3), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13),
+                       (14, 15), (0, 8), (2, 10), (4, 12), (6, 14), (1, 9), (3, 11),
+                       (5, 13), (7, 15), (0, 11), (1, 10), (8, 3), (9, 2), (0, 2),
+                       (1, 3), (8, 10), (9, 11), (2, 13), (3, 12), (10, 5), (11, 4),
+                       (2, 4), (3, 5), (10, 12), (11, 13), (4, 15), (5, 14),
+                       (12, 7), (13, 6), (4, 6), (5, 7), (12, 14), (13, 15)]
+        else:
+            print("Bad input shape! Quitting...")
+            quit()
+                   
         # Build needed object attributes
-        if not self.cube_faces or self.cube_textures:
-            cube = self.cube() # Mesh of a 1 x 1 x 1 cube
+        cube = self.cube() # Mesh of a 1 x 1 x 1 cube
+        spring_textures = []
+        for _ in springs: # Generate a unique texture for each spring in a frame
+            mesh_verts_rgb = torch.ones_like(cube._verts_list[0]) # (1, V, 3)
+            for face in mesh_verts_rgb: # Randomize the colors per-vertex
+                for channel in face:
+                    channel *= uniform(0.55, 0.85)
+            spring_textures.append(TexturesVertex(
+                verts_features = mesh_verts_rgb[None].to(self.device)))
         if not self.cube_faces: # shape: 12 x 3
             # Get faces vector from a generic cube
             # None-index to wrap in a batch of 1 (instead of in a list here)
             self.cube_faces = cube._faces_list[0].to(self.device)[None]
-        if not self.cube_textures:
-            cube_verts_rgb = torch.ones_like(cube.verts_list()[0])[None]
-            for face in cube_verts_rgb[0]:
-                for channel in face:
-                    channel *= uniform(0.6, 0.98)
-            self.cube_textures = TexturesVertex(
-                verts_features = cube_verts_rgb.to(self.device))
-        if not self.ground: # Green ground mesh, a 20 x 20 plane at z = 0
-            plane_verts = torch.Tensor(
-                [[-10.0, 10.0, 0.0], [-10.0, -10.0, 0.0],
-                 [10.0, -10.0, 0.0], [10.0, 10.0, 0.0]]).to(self.device)
-            plane_faces = torch.Tensor([[0, 1, 2], [2, 3, 0]]).to(self.device)
-            self.ground = Meshes(verts = plane_verts[None], faces = plane_faces[None])
-            plane_verts_rgb = torch.ones_like(self.ground.verts_list()[0])[None]
-            plane_verts_rgb[0, :, :] /= 8
-            plane_verts_rgb[0, :, 1] *= 5 # Green
-            self.ground.textures = TexturesVertex(
-                verts_features = plane_verts_rgb.to(self.device))
+        if not self.ground:
+            self.build_ground()
         if self.use_tqdm:
-            progress = tqdm(total = coords.size(0))
+            progress = tqdm(total = skip_shape[0])
+            
         # Render each frame and store in memory
-        for i, verts in enumerate(coords):
-            # verts.shape for a cube: 8 x 3
-            cube = Meshes(verts = verts[None], faces = self.cube_faces)
-            cube.textures = self.cube_textures # Add texture info
-            self.frames.append( # Append render with ground to frame buffer
-                self.render_meshes(join_meshes_as_scene([cube, self.ground])))
+        for i, frame in enumerate(coords):
+            if i % every != 0: # Allows for subsampling of large datasets
+                continue
+            meshes = [self.ground]
+            # Build each spring and render the mesh to an image
+            for (point0, point1), texture in zip(springs, spring_textures):
+                mesh = cube.clone() # Begin at 1 x 1 x 1
+                # Scale to get a mesh of size 0.2 x 0.2 x 0.2
+                verts = mesh._verts_list[0] / 5
+                # Offset the spring according to its bounding points
+                verts[:4] += frame[point0]
+                verts[4:] += frame[point1]
+                # Permute to increase x and y thickness
+                verts[:2, 1] += 0.2
+                verts[6:, 1] -= 0.2
+                verts[2:4, 1] += 0.025
+                verts[4:6, 1] -= 0.025
+                # Update the mesh with its appropriate verticies and texture
+                mesh._verts_list = [verts]
+                mesh.textures = texture
+                meshes.append(mesh.clone())
+            # Render composite mesh (with ground) and append to frame buffer
+            self.frames.append(self.render_meshes(join_meshes_as_scene(meshes)))
             if self.use_tqdm:
                 progress.update(1)
+                
         if self.use_tqdm:
+            progress.update(progress.total - progress.n)
             progress.close()
-        self.export_video(result_path = result_fn, fps = fps)
+        self.export_video(result_path = result_fn, fps = int(fps / every))
         self.frames = []

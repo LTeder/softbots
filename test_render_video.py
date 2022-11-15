@@ -1,7 +1,6 @@
 import torch
-from pathlib import Path
 
-from renderbot import RenderBot
+from render import RenderBot
 
 if torch.cuda.is_available():
     device = torch.device("cuda:0")
@@ -9,8 +8,7 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-fn = Path("Crossed3DCube_Points_time.pt")
-assert fn.exists()
-
-#renderbot = RenderBot()
-RenderBot().render_from_file(input_fn = fn, result_fn = "Crossed3DCube.mp4", fps = 500)
+renderbot = RenderBot()
+renderbot.render_from_file(input_fn = "RandomSearchRobot.pt",
+                           result_fn = "RandomSearchRobot_1000fps.mp4",
+                           fps = 1000, every = 100)
