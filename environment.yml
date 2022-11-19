@@ -8,5 +8,4 @@ dependencies:
     - opencv-python-headless
     - matplotlib
     - numpy
-    - pytorch
     - tqdm

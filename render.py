@@ -6,7 +6,6 @@ from tqdm.auto import tqdm
 
 from pytorch3d.structures import Meshes, join_meshes_as_scene
 from pytorch3d.ops import cubify
-from pytorch3d.vis.plotly_vis import AxisArgs, plot_batch_individually, plot_scene
 from pytorch3d.renderer import (
     look_at_view_transform,
     FoVPerspectiveCameras,

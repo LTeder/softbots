@@ -9,6 +9,6 @@ else:
     device = torch.device("cpu")
 
 renderbot = RenderBot()
-renderbot.render_from_file(input_fn = "RandomSearchRobot.pt",
-                           result_fn = "RandomSearchRobot_1000fps.mp4",
-                           fps = 1000, every = 100)
+renderbot.render_from_file(input_fn = "Robot4_dt0.0001.pt",
+                           result_fn = "Robot4_dt0.0001_500fps.mp4",
+                           fps = 500, every = 100)
