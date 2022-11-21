@@ -1,7 +1,5 @@
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
-from tqdm.auto import tqdm
 
 from bots import Spring, Mass, Universe
 
@@ -11,8 +9,7 @@ if torch.cuda.is_available():
     torch.cuda.set_device(device)
 else:
     device = torch.device("cpu")
-device = torch.device("cpu")
-device
+print(f"Using device {device}")
 
 class Soft_Spring(Spring):
     def __init__(self, Masses, L_0=1, k=1000, m1_idx=0, m2_idx=0,
@@ -117,10 +114,10 @@ Springs = [
     ContractExpand(Masses, L_0 = 3, m1_idx = 12, m2_idx = 14),
     ContractExpand(Masses, L_0 = 3, m1_idx = 13, m2_idx = 15)]
 
-dt = 0.0001
-uni = Universe(Masses, Springs, dt, verbose=False)
+dt = 0.001
+uni = Universe(Masses, Springs, dt, damping = 0.25, verbose = False)
 
-t = np.arange(0, 2.0, dt)
+t = np.arange(0, 20.0, dt)
 result = uni.simulate(t)
 
 points_tensor = result[0].clone().detach()

@@ -1,6 +1,14 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
+
+# Setup execution device for torch tensors
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+    torch.cuda.set_device(device)
+else:
+    device = torch.device("cpu")
 
 def dist(p1, p2):
     # p1 and p2 are torch tensors
@@ -198,7 +206,7 @@ class Universe:
         start_pos_horizontal = self.center_of_mass_horizontal()
         
         self.energies = torch.zeros((len(t), 3), device = device)
-        self.points = torch.zeros((len(t), len(Masses), 3), device = device)
+        self.points = torch.zeros((len(t), len(self.Masses), 3), device = device)
 
         if self.verbose:
             for i, m in enumerate(self.Masses):
@@ -217,4 +225,4 @@ class Universe:
         end_pos_horizontal = self.center_of_mass_horizontal()
         total_dist_horizontal = dist(start_pos_horizontal, end_pos_horizontal)
             
-        return self.points, self.energies, anim, total_dist_horizontal
+        return self.points, self.energies, total_dist_horizontal
