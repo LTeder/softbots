@@ -2,8 +2,7 @@ import torch
 import numpy as np
 from tqdm.auto import tqdm, trange
 
-from bots import Mass, Spring, Universe
-from test import *
+from evolve import *
 
 ## simple: only crossover
 def genetic_programming(N, T, p = 0.5, mutat_prob = 0.05):
