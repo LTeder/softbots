@@ -11,9 +11,6 @@ def hill_climber(T, mutat_prob = 1.0):
     new_dist = helper(new_genome, spring_indexes, spring_lengths)
     population.append([new_dist, new_genome])
 
-    # sorted descending
-    population.sort(key = lambda x: x[0], reverse = False)
-
     size = 1 # starting population size
     best_dist_list = []
     best_genome_list = []
@@ -28,13 +25,12 @@ def hill_climber(T, mutat_prob = 1.0):
             new_genome = mutate_genome(genome)
             new_dist = helper(genome, spring_indexes, spring_lengths)
             population.append([new_dist, new_genome])
-
-        population.sort(key=lambda x: x[0], reverse=False)
             
         ### RECOMBINATION ###
         # generate N offspring
         new_population = []
-        [_, parent_1], [_, parent_2] = population[0], population[0]
+        idx = np.random.randint(0, len(population))
+        [_, parent_1], [_, parent_2] = population[0], population[idx]
 
         ## keep both offspring
         offspring_1, offspring_2 = crossover(parent_1, parent_2)
@@ -46,7 +42,7 @@ def hill_climber(T, mutat_prob = 1.0):
         new_population.append([offspring_2_dist, offspring_2])
 
         population += new_population
-        population.sort(key = lambda x: x[0], reverse = False)
+        population.sort(key = lambda x: x[0], reverse = True)
         
         population = population[:2]
         

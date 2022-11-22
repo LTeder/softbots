@@ -211,24 +211,22 @@ def mutate_genome(genome):
         
     return genome
 
-"""## Crossing over robots
-Procedure:
-- pick a random spring, and then switch?
-    - what if multiple? does this need to be adjacnet? 
-"""
+def crossover(genome1, genome2, max_length = 8):
+    """
+    pick a random length swap portion 
+    """
+    # pick a random length
+    length = np.random.randint(1, max_length)
 
-def crossover(genome1, genome2):
-    # pick a random index
-    idx = np.random.randint(len(genome1))
+    # pick a random start index
+    idx = np.random.randint(len(genome1)+1 - length )
 
     # return two new genomes
-    temp = genome1[idx]
-    genome1[idx] = genome2[idx]
-    genome2[idx] = temp
+    temp = genome1[idx: idx+length]
+    genome1[idx:idx+length] = genome2[idx:idx+length]
+    genome2[idx:idx+length] = temp
 
     return genome1, genome2
-
-"""# Genetic programming"""
 
 def helper(genome, spring_indexes, spring_lengths):
     Masses = [

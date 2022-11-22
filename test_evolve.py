@@ -20,25 +20,23 @@ def genetic_programming(N, T, p = 0.5, mutat_prob = 0.05):
     size = N # starting population size
     best_dist_list = []
     best_genome_list = []
-    dist_list = []
-    consec_count = 0
+    best_dist = 0.
+    best_genome = new_genome
     
     print("Beginning evolution...")
     for t in trange(T):
         ### Mutation Probability HILL CLIMBING ###
-        for mutation in range(int(mutat_prob*size)):
+        for mutation in range(int(mutat_prob * size)):
             mut_idx = np.random.randint(0, len(population))
             _, genome = population.pop(mut_idx)
             new_genome = mutate_genome(genome)
             new_dist = helper(genome, spring_indexes, spring_lengths)
             population.append([new_dist, new_genome])
-
-        population.sort(key=lambda x: x[0], reverse=False)
             
         ### RECOMBINATION ###
         new_population = []
         # to-do: implement niching
-        idx_1, idx_2 = np.random.choice(len(population), 2, replace=False)
+        idx_1, idx_2 = np.random.choice(len(population), 2, replace = False)
         [_, parent_1], [_, parent_2] = population[idx_1], population[idx_2]
 
         ## keep both offspring
@@ -51,16 +49,12 @@ def genetic_programming(N, T, p = 0.5, mutat_prob = 0.05):
         new_population.append([offspring_2_dist, offspring_2])
 
         population += new_population
-        population.sort(key = lambda x: x[0], reverse = False)
-        
-        population = population[:1]
+        population.sort(key = lambda x: x[0], reverse = True)
+        population = population[:-1]
         
         ### update best dists, tours
         dist, genome = population[0]
-        if t == 0:
-            best_dist = dist
-            best_genome = genome
-        elif dist > best_dist:
+        if dist > best_dist:
             best_genome = genome
             best_dist = dist
         
