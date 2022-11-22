@@ -1,6 +1,4 @@
-import torch
 import numpy as np
-from tqdm.auto import tqdm, trange
 
 from bots import Mass, Spring, Universe
 

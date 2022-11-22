@@ -1,9 +1,7 @@
-import torch
 import numpy as np
-from tqdm.auto import tqdm, trange
+from tqdm.auto import trange
 
-from bots import Mass, Spring, Universe
-from test import *
+from evolve import *
 
 def hill_climber(T, mutat_prob = 1.0):
     # generate starting populations

@@ -1,6 +1,5 @@
-import torch
 import numpy as np
-from tqdm.auto import tqdm, trange
+from tqdm.auto import trange
 
 from evolve import *
 

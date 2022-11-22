@@ -1,9 +1,6 @@
-import torch
-import numpy as np
-from tqdm.auto import tqdm, trange
+from tqdm.auto import trange
 
-from bots import Mass, Spring, Universe
-from test import *
+from evolve import *
 
 def random_search(T):
     # generate starting populations
