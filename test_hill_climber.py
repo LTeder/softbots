@@ -63,7 +63,6 @@ def hill_climber(T, mutat_prob = 1.0):
     return population, best_dist_list, best_genome_list
 
 num_gens = 50
-pop_size = 10
 
 population, best_dist_list, best_genome_list = hill_climber(num_gens)
 

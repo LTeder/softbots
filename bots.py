@@ -126,16 +126,13 @@ class Universe:
         return ax
 
     def center_of_mass_horizontal(self):
+        com = torch.zeros((2), device = device)
         total_mass = 0
-        x_center = 0
-        y_center = 0
         for m in self.Masses:
             total_mass += m.m
-            x_center += m.p[0].item() * m.m
-            y_center += m.p[1].item() * m.m
-        x_center /= total_mass
-        y_center /= total_mass
-        return torch.tensor([x_center, y_center], device = device)
+            com += m.p[:2] * m.m
+        com /= total_mass
+        return com
 
     def integration_step(self):
         # velocity and position carry over, force and acceleraton are recalculated at each time step
