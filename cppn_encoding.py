@@ -758,7 +758,7 @@ def get_biggest_chunk(exists_mat):
 
     if len(chunks) == 0:
         return None
-    delse:
+    else:
         return chunks[0]
     
 # function to get spring types
