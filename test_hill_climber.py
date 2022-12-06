@@ -3,30 +3,23 @@ from tqdm.auto import trange
 
 from evolve import *
 
-## simple: only crossover
-def genetic_programming(N, T, p = 0.5, mutat_prob = 0.05):
+def hill_climber(T, mutat_prob = 1.0):
     # generate starting populations
     genome_length = len(spring_lengths)
     population = []
-    print("Generating initial population...")
-    for _ in trange(N): # Generate initial population
-        new_genome = generate_random_genome(genome_length)
-        new_dist = helper(new_genome, spring_indexes, spring_lengths)
-        population.append([new_dist, new_genome])
+    new_genome = generate_random_genome(genome_length)
+    new_dist = helper(new_genome, spring_indexes, spring_lengths)
+    population.append([new_dist, new_genome])
 
-    # sorted descending
-    population.sort(key = lambda x: x[0], reverse=False)
-
-    size = N # starting population size
+    size = 1 # starting population size
     best_dist_list = []
     best_genome_list = []
     best_dist = 0.
     best_genome = new_genome
     
-    print("Beginning evolution...")
     for t in trange(T):
         ### Mutation Probability HILL CLIMBING ###
-        for mutation in range(int(mutat_prob * size)):
+        for _ in range(int(mutat_prob * size)):
             mut_idx = np.random.randint(0, len(population))
             _, genome = population.pop(mut_idx)
             new_genome = mutate_genome(genome)
@@ -34,10 +27,10 @@ def genetic_programming(N, T, p = 0.5, mutat_prob = 0.05):
             population.append([new_dist, new_genome])
             
         ### RECOMBINATION ###
+        # generate N offspring
         new_population = []
-        # to-do: implement niching
-        idx_1, idx_2 = np.random.choice(len(population), 2, replace = False)
-        [_, parent_1], [_, parent_2] = population[idx_1], population[idx_2]
+        idx = np.random.randint(0, len(population))
+        [_, parent_1], [_, parent_2] = population[0], population[idx]
 
         ## keep both offspring
         offspring_1, offspring_2 = crossover(parent_1, parent_2)
@@ -50,7 +43,8 @@ def genetic_programming(N, T, p = 0.5, mutat_prob = 0.05):
 
         population += new_population
         population.sort(key = lambda x: x[0], reverse = True)
-        population = population[:-1]
+        
+        population = population[:2]
         
         ### update best dists, tours
         dist, genome = population[0]
@@ -65,9 +59,7 @@ def genetic_programming(N, T, p = 0.5, mutat_prob = 0.05):
     return population, best_dist_list, best_genome_list
 
 num_gens = 50
-pop_size = 10
 
-population, best_dist_list, best_genome_list = \
-    genetic_programming(pop_size, num_gens, p = 0.5, mutat_prob = 0.05)
+population, best_dist_list, best_genome_list = hill_climber(num_gens)
 
 print(population, best_dist_list, best_genome_list)
