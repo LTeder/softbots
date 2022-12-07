@@ -1196,7 +1196,7 @@ def diversity(population):
     for i in range(len(population)):
         _, genome1 = population[i]
 
-        for j in range(i, len(population)):
+        for j in range(i+1, len(population)):
             _, genome2 = population[j]
 
             total_div += 1/similarity(genome1, genome2)
