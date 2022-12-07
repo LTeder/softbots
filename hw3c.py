@@ -6,10 +6,10 @@ def main():
     #                         constant_max = 1):
     depth = 6
     N = 3
-    pop_size = 5
-    num_gens = 5
-    T = 3
-    dt = 0.0005
+    pop_size = 20
+    num_gens = 100
+    T = 5
+    dt = 0.0001
     truncation_p = 0.5
     mutation_prob = 0.25
     damping = 0.05

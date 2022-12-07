@@ -1,14 +1,6 @@
-import matplotlib.pyplot as plt
 import numpy as np
-import timeit
-
-from matplotlib import rc
-rc('animation', html='jshtml')
-
 from math import *
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-import matplotlib.animation as animation
+from tqdm.auto import tqdm, trange
 
 ## functions
 def complexity(heap):
@@ -344,14 +336,6 @@ class Spring:
         
         return 1/2 * self.k * (self.L - self.L_1)**2 
         
-        # # positive when compressed, negative when stretched
-        # if self.L < self.L_1:
-        #     return -e
-        # else:
-        #     return e
-
-    
-from matplotlib.projections.polar import Axes
 class Universe:
     def __init__(self, Masses, Springs, dt, box_dims = [20, 20, 20], K_G=1e6, g=-9.812, damping = 0,
                  mu=1.0):
@@ -487,35 +471,8 @@ class Universe:
                     # oppose y direction
                     m.F[1] -= y_normed * self.mu * normal_force
             
-            # # y dimension left wall
-            # if m.p[1] < 0:
-            #     m.F[1] += self.K_G * (0 - m.p[1])
-                
-            #     self.potential_springs += 1/2 * self.K_G * (0 - m.p[1])**2
-                
-            # # y dimension right wall
-            # if m.p[1] > self.box_dims[1]:
-            #     m.F[1] += self.K_G * (self.box_dims[1] - m.p[1])
-                
-            #     self.potential_springs += 1/2* self.K_G * (self.box_dims[1] - m.p[1])**2
-        
-            # # x dimension left wall
-            # if m.p[0] < 0:
-            #     m.F[0] += self.K_G * (0 - m.p[0])
-                
-            #     self.potential_springs += 1/2 * self.K_G * (0 - m.p[0])**2
-        
-            # # ceiling
-            # if m.p[2] > self.box_dims[2]:
-            #     m.F[2] += self.K_G * (self.box_dims[2] - m.p[2])
-                
-            #     self.potential_springs += 1/2 * (self.box_dims[2] - m.p[2])**2
-        
-
-            ### (to-do: add additional forces)
             
         ### calculate energies (note: should this be before or after the points are adjusted?)
-
         ### update a, v, p
         for m in self.Masses:
             # update acceleration
@@ -552,53 +509,6 @@ class Universe:
             points.append(m.listify())
         return points
     
-    def display_frame(self, save=False, filename=None):
-        
-        # plot bounds
-#         corner1 = [0, 0]
-#         corner2 = [self.box_dims[0], 0]
-#         corner3 = [0, self.box_dims[1]]
-#         corner4 = self.box_dims
-        
-#         plt.plot()
-        fig = plt.figure()
-    
-        ax = plt.axes(projection='3d')
-
-        ax.cla()
-
-        ax.axes.set_xlim3d(left=0, right=self.box_dims[0]) 
-        ax.axes.set_ylim3d(bottom=0, top=self.box_dims[1]) 
-        ax.axes.set_zlim3d(bottom=0, top=self.box_dims[2]) 
-        
-        # scatter plot of Point Masses
-        for m in self.Masses:
-            ax.scatter3D(m.p[0], m.p[1], m.p[2], color='k')
-        
-        # plot of Springs
-        for s in self.Springs:
-            x = [s.m1.p[0], s.m2.p[0]]
-            y = [s.m1.p[1], s.m2.p[1]]
-            z = [s.m1.p[2], s.m2.p[2]]
-            if s.status == 'steady':
-                color = 'green'
-            elif s.status == 'stretched':
-                color = 'red'
-            else:
-                color = 'blue'
-            ax.plot3D(x, y, z, color=color)
-
-        # increase size
-        fig.set_size_inches(10, 10)
-
-        # display or save
-        if save:
-            fig.savefig(filename)
-            
-        # plt.close()
-
-        return ax
-    
     def simulate(self, t, save = False, filename = '', verbose=False, animate=False,
                  nth_frame = 100):
         """
@@ -616,7 +526,7 @@ class Universe:
 
         start_pos_horizontal = self.center_of_mass_horizontal()
         
-        for i, t_ in enumerate(t):
+        for i, t_ in tqdm(enumerate(t), total = length, leave = False):
             # do integration step
             energies = self.integration_step(t=t_, verbose=verbose)
             
@@ -627,48 +537,22 @@ class Universe:
             num_digits = len(i_str)
             
             frame_filename = filename + '0'*(digit_length - num_digits) + i_str
-            
-            ## frame
-            if animate:
-                if i % nth_frame == 0:
-                    frames.append(self.display_frame(save=save, filename=frame_filename))
 
             # don't display frame each time
             # self.display_frame(save=save, filename=frame_filename)
 
             self.points.append([m.p.copy() for m in self.Masses])
 
-        if animate:
-            anim = self.animate(frames)
-        else:
-            anim = None
+        anim = self.animate(frames) if animate else None
 
         end_pos_horizontal = self.center_of_mass_horizontal()
 
         total_dist_horizontal = dist_2d(start_pos_horizontal, end_pos_horizontal)
             
         return self.points, self.energies, anim, total_dist_horizontal
-
-    def animate_single_frame(self, ax):
-        return ax
-
-    def animate(self, frames):
-
-        fig = plt.figure(figsize=(8,6))
-        ax = plt.axes(projection='3d')
-
-        ax.axes.set_xlim3d(left=0, right=self.box_dims[0]) 
-        ax.axes.set_ylim3d(bottom=0, top=self.box_dims[1]) 
-        ax.axes.set_zlim3d(bottom=0, top=self.box_dims[2]) 
-
-        frames = iter(frames)
-        anim = animation.FuncAnimation(fig, self.animate_single_frame, frames=frames, blit=False, repeat=True)
-
-        return anim
     
 # function to find biggest "chunk"
 def get_biggest_chunk(exists_mat):
-
     def helper(chunk, checked_matrix, exists_mat, indexes, shape):
         """
 
@@ -1259,12 +1143,6 @@ def get_dist_helper(T, dt, genome, damping,
 ### Crossover and anti-crowding
 def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, mutat_prob = 0.05, damping=0.05, 
                         constant_max = 1):
-    """
- 
-    """
-    
-    start = timeit.default_timer()
-
     # generate starting populations
     population = []
 
@@ -1289,13 +1167,13 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
     diversity_list = []
     
     consec_count = 0 # if exceeds T_consec, 
-    for gen in range(num_gens):
+    for gen in trange(num_gens):
         
         print('generation', gen)
 
         ### Mutation Probability HILL CLIMBING ###
         
-        for mutation in range(int(mutat_prob*size)):
+        for mutation in trange(int(mutat_prob*size), leave = False):
             mut_idx = np.random.randint(0, len(population))
         
             _, genome = population.pop(mut_idx)
@@ -1317,7 +1195,7 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         # generate N offspring
         new_population = []
 
-        for n in range(pop_size):
+        for n in trange(pop_size, leave = False):
             
             # to-do: implement niching
             idx_1, idx_2 = np.random.choice(len(population), 2, replace=False)
@@ -1361,36 +1239,6 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
             else:
                 print('skipped crossover')
 
-        #     ## keep both offspring
-        #     # print('starting crossover')
-        #     offspring_1, offspring_2 = crossover(parent_1, parent_2)
-
-        #     # print('crossover')
-        #     # print(offspring_1, offspring_2)
-        #     # print()
-
-        #     offspring_1_dist = helper(offspring_1, spring_indexes, spring_lengths)
-        #     offspring_2_dist = helper(offspring_2, spring_indexes, spring_lengths)
-
-        #     new_population.append( [offspring_1_dist, offspring_1]) # stays sorted
-        #     new_population.append( [offspring_2_dist, offspring_2])
-        #     # print('crossover done')
-        #     success=True
-        # except Exception as e:
-        #     print(e)
-        #     print('Divide by zero error, retry')
-            
-        # if success: break
-    
-    # keep best offspring - ANTI CROWDING - replace parent if similar and better
-#             dist_1 = tour_dist(points, offspring_1)
-#             dist_2 = tour_dist(points, offspring_2)
-#             if dist_1 < dist_2:
-#                 new_population.add(offspring_1)
-#             else:
-#                 new_population.add(offspring_2)
-
-
         # population += new_population
         population.sort(key=lambda x: x[0],reverse=True)
         
@@ -1403,10 +1251,7 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         ## pop remaining values
         for discard_ in range(len(population) - size):
             population.pop()
-#         population = population[:size]
-        
-        
-    
+            
         ### update best dists, tours
         dist, genome = population[0]
         
@@ -1418,14 +1263,6 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         elif dist > best_dist:
             best_genome = genome
             best_dist = dist
-            
-            # reset consecutive count
-#             T_consec = 0
-#         else:
-#             T_consec += 1
-#             if consec_count >= T_consec:
-#                 print("ended early at t = {t}")
-#                 break
         
         best_dist_list.append(best_dist)
         print(best_dist)
@@ -1437,9 +1274,6 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         print(population)
         
         diversity_list.append(diversity(population))
-        
-    end = timeit.default_timer()
-    print(f"time elapsed: {end-start } s")
         
         # optional: update p
     return population, best_dist_list, best_genome_list, diversity_list
