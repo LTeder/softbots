@@ -1002,7 +1002,7 @@ def crossover(parent_1, parent_2, retry_bound = 50, verbose=True):
             if verbose:
                 print('not valid heap')
       
-def big_crossover(bundled_parent1, bundled_parent2, retry_bound=50, verbose = False):
+def big_crossover(bundled_parent1, bundled_parent2, retry_bound=50, verbose = True):
     
     """
     perform crossover on all 4 inner genes
