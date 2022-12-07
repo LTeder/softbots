@@ -341,9 +341,7 @@ class Spring:
         #     return -e
         # else:
         #     return e
-
-    
-from matplotlib.projections.polar import Axes
+        
 class Universe:
     def __init__(self, Masses, Springs, dt, box_dims = [20, 20, 20], K_G=1e6, g=-9.812, damping = 0,
                  mu=1.0):
