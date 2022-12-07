@@ -1,14 +1,6 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import timeit
-
-from matplotlib import rc
-rc('animation', html='jshtml')
-
 from math import *
-import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
-import matplotlib.animation as animation
 
 ## functions
 def complexity(heap):
@@ -368,9 +360,6 @@ class Universe:
         
         for s in self.Springs:
             s.damping = self.damping
-            
-#         self.ax = plt.axes(projection='3d')
-
 
         self.points = []
         
@@ -552,53 +541,6 @@ class Universe:
             points.append(m.listify())
         return points
     
-    def display_frame(self, save=False, filename=None):
-        
-        # plot bounds
-#         corner1 = [0, 0]
-#         corner2 = [self.box_dims[0], 0]
-#         corner3 = [0, self.box_dims[1]]
-#         corner4 = self.box_dims
-        
-#         plt.plot()
-        fig = plt.figure()
-    
-        ax = plt.axes(projection='3d')
-
-        ax.cla()
-
-        ax.axes.set_xlim3d(left=0, right=self.box_dims[0]) 
-        ax.axes.set_ylim3d(bottom=0, top=self.box_dims[1]) 
-        ax.axes.set_zlim3d(bottom=0, top=self.box_dims[2]) 
-        
-        # scatter plot of Point Masses
-        for m in self.Masses:
-            ax.scatter3D(m.p[0], m.p[1], m.p[2], color='k')
-        
-        # plot of Springs
-        for s in self.Springs:
-            x = [s.m1.p[0], s.m2.p[0]]
-            y = [s.m1.p[1], s.m2.p[1]]
-            z = [s.m1.p[2], s.m2.p[2]]
-            if s.status == 'steady':
-                color = 'green'
-            elif s.status == 'stretched':
-                color = 'red'
-            else:
-                color = 'blue'
-            ax.plot3D(x, y, z, color=color)
-
-        # increase size
-        fig.set_size_inches(10, 10)
-
-        # display or save
-        if save:
-            fig.savefig(filename)
-            
-        # plt.close()
-
-        return ax
-    
     def simulate(self, t, save = False, filename = '', verbose=False, animate=False,
                  nth_frame = 100):
         """
@@ -627,44 +569,16 @@ class Universe:
             num_digits = len(i_str)
             
             frame_filename = filename + '0'*(digit_length - num_digits) + i_str
-            
-            ## frame
-            if animate:
-                if i % nth_frame == 0:
-                    frames.append(self.display_frame(save=save, filename=frame_filename))
-
-            # don't display frame each time
-            # self.display_frame(save=save, filename=frame_filename)
 
             self.points.append([m.p.copy() for m in self.Masses])
 
-        if animate:
-            anim = self.animate(frames)
-        else:
-            anim = None
+        anim = self.animate(frames) if animate else None
 
         end_pos_horizontal = self.center_of_mass_horizontal()
 
         total_dist_horizontal = dist_2d(start_pos_horizontal, end_pos_horizontal)
             
         return self.points, self.energies, anim, total_dist_horizontal
-
-    def animate_single_frame(self, ax):
-        return ax
-
-    def animate(self, frames):
-
-        fig = plt.figure(figsize=(8,6))
-        ax = plt.axes(projection='3d')
-
-        ax.axes.set_xlim3d(left=0, right=self.box_dims[0]) 
-        ax.axes.set_ylim3d(bottom=0, top=self.box_dims[1]) 
-        ax.axes.set_zlim3d(bottom=0, top=self.box_dims[2]) 
-
-        frames = iter(frames)
-        anim = animation.FuncAnimation(fig, self.animate_single_frame, frames=frames, blit=False, repeat=True)
-
-        return anim
     
 # function to find biggest "chunk"
 def get_biggest_chunk(exists_mat):
@@ -737,10 +651,6 @@ def get_biggest_chunk(exists_mat):
                         chunks.append(chunk)
 
     # or loop through adjacent units and see if true? Probably the former 
-
-    
-
-
 
         # if is true and adjacnet, add to current chunk
 
@@ -1441,3 +1351,4 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         
         # optional: update p
     return population, best_dist_list, best_genome_list, diversity_list
+    
