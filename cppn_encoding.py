@@ -1,6 +1,6 @@
 import numpy as np
-import timeit
 from math import *
+from tqdm.auto import tqdm, trange
 
 ## functions
 def complexity(heap):
@@ -1165,12 +1165,6 @@ def get_dist_helper(T, dt, genome, damping,
 ### Crossover and anti-crowding
 def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, mutat_prob = 0.05, damping=0.05, 
                         constant_max = 1):
-    """
- 
-    """
-    
-    start = timeit.default_timer()
-
     # generate starting populations
     population = []
 
@@ -1195,13 +1189,13 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
     diversity_list = []
     
     consec_count = 0 # if exceeds T_consec, 
-    for gen in range(num_gens):
+    for gen in trange(num_gens):
         
         print('generation', gen)
 
         ### Mutation Probability HILL CLIMBING ###
         
-        for mutation in range(int(mutat_prob*size)):
+        for mutation in trange(int(mutat_prob*size), leave = False):
             mut_idx = np.random.randint(0, len(population))
         
             _, genome = population.pop(mut_idx)
@@ -1223,7 +1217,7 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         # generate N offspring
         new_population = []
 
-        for n in range(pop_size):
+        for n in trange(pop_size, leave = False):
             
             # to-do: implement niching
             idx_1, idx_2 = np.random.choice(len(population), 2, replace=False)
@@ -1267,36 +1261,6 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
             else:
                 print('skipped crossover')
 
-        #     ## keep both offspring
-        #     # print('starting crossover')
-        #     offspring_1, offspring_2 = crossover(parent_1, parent_2)
-
-        #     # print('crossover')
-        #     # print(offspring_1, offspring_2)
-        #     # print()
-
-        #     offspring_1_dist = helper(offspring_1, spring_indexes, spring_lengths)
-        #     offspring_2_dist = helper(offspring_2, spring_indexes, spring_lengths)
-
-        #     new_population.append( [offspring_1_dist, offspring_1]) # stays sorted
-        #     new_population.append( [offspring_2_dist, offspring_2])
-        #     # print('crossover done')
-        #     success=True
-        # except Exception as e:
-        #     print(e)
-        #     print('Divide by zero error, retry')
-            
-        # if success: break
-    
-    # keep best offspring - ANTI CROWDING - replace parent if similar and better
-#             dist_1 = tour_dist(points, offspring_1)
-#             dist_2 = tour_dist(points, offspring_2)
-#             if dist_1 < dist_2:
-#                 new_population.add(offspring_1)
-#             else:
-#                 new_population.add(offspring_2)
-
-
         # population += new_population
         population.sort(key=lambda x: x[0],reverse=True)
         
@@ -1310,8 +1274,6 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         for discard_ in range(len(population) - size):
             population.pop()
 #         population = population[:size]
-        
-        
     
         ### update best dists, tours
         dist, genome = population[0]
@@ -1324,14 +1286,6 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         elif dist > best_dist:
             best_genome = genome
             best_dist = dist
-            
-            # reset consecutive count
-#             T_consec = 0
-#         else:
-#             T_consec += 1
-#             if consec_count >= T_consec:
-#                 print("ended early at t = {t}")
-#                 break
         
         best_dist_list.append(best_dist)
         print(best_dist)
@@ -1343,9 +1297,6 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         print(population)
         
         diversity_list.append(diversity(population))
-        
-    end = timeit.default_timer()
-    print(f"time elapsed: {end-start } s")
         
         # optional: update p
     return population, best_dist_list, best_genome_list, diversity_list
