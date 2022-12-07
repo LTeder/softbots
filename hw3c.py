@@ -6,9 +6,15 @@ def main():
     #                         constant_max = 1):
     depth = 6
     N = 3
+<<<<<<< HEAD
     pop_size = 20
     num_gens = 100
     T = 5
+=======
+    pop_size = 5
+    num_gens = 5
+    T = 3
+>>>>>>> f289327594b25a99fa275dd13673ad0442a4b396
     dt = 0.0001
     truncation_p = 0.5
     mutation_prob = 0.25
