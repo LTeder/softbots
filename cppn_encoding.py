@@ -390,7 +390,6 @@ class Universe:
 
     def integration_step(self, t=0, verbose=False):
         # velocity and position carry over, Force and acceleraton are recalculated at each time step
-        
         # reset forces and accelerations
         for m in self.Masses:
             m.F = [0, 0, 0]
@@ -436,7 +435,6 @@ class Universe:
             ### add spring potential energy
             self.potential_springs += s.energy()
 
-        
         ### update Mass Forces
         for m in self.Masses:
             
@@ -448,14 +446,7 @@ class Universe:
             
             # calculate kinetic energy
             self.kinetic += 1/2 * m.m * (m.v[0]**2 + m.v[1]**2 + m.v[2]**2)
-
-            ### boundary collision forces
-            # # x dimension right wall
-            # if m.p[0] > self.box_dims[0]:
-            #     m.F[0] += self.K_G * (self.box_dims[0] - m.p[0])
-                
-            #     self.potential_springs += 1/2 * self.K_G * (self.box_dims[0] - m.p[0])**2
-                
+            
             # ground
             if m.p[2] < 0:
                 # normal force
@@ -474,35 +465,7 @@ class Universe:
                     # oppose y direction
                     m.F[1] -= y_normed * self.mu * normal_force
             
-            # # y dimension left wall
-            # if m.p[1] < 0:
-            #     m.F[1] += self.K_G * (0 - m.p[1])
-                
-            #     self.potential_springs += 1/2 * self.K_G * (0 - m.p[1])**2
-                
-            # # y dimension right wall
-            # if m.p[1] > self.box_dims[1]:
-            #     m.F[1] += self.K_G * (self.box_dims[1] - m.p[1])
-                
-            #     self.potential_springs += 1/2* self.K_G * (self.box_dims[1] - m.p[1])**2
-        
-            # # x dimension left wall
-            # if m.p[0] < 0:
-            #     m.F[0] += self.K_G * (0 - m.p[0])
-                
-            #     self.potential_springs += 1/2 * self.K_G * (0 - m.p[0])**2
-        
-            # # ceiling
-            # if m.p[2] > self.box_dims[2]:
-            #     m.F[2] += self.K_G * (self.box_dims[2] - m.p[2])
-                
-            #     self.potential_springs += 1/2 * (self.box_dims[2] - m.p[2])**2
-        
-
-            ### (to-do: add additional forces)
-            
         ### calculate energies (note: should this be before or after the points are adjusted?)
-
         ### update a, v, p
         for m in self.Masses:
             # update acceleration
@@ -525,7 +488,6 @@ class Universe:
             s.refresh_L()
             s.set_L_1(t)
            
-        #
         if verbose:
             for m in self.Masses:
                 print(f"m.F = {m.F}, m.a = {m.a}, m.v = {m.v}, m.p = {m.p}")
@@ -556,7 +518,7 @@ class Universe:
 
         start_pos_horizontal = self.center_of_mass_horizontal()
         
-        for i, t_ in enumerate(t):
+        for i, t_ in tqdm(enumerate(t), leave = False):
             # do integration step
             energies = self.integration_step(t=t_, verbose=verbose)
             
@@ -580,7 +542,6 @@ class Universe:
     
 # function to find biggest "chunk"
 def get_biggest_chunk(exists_mat):
-
     def helper(chunk, checked_matrix, exists_mat, indexes, shape):
         """
 
