@@ -518,7 +518,7 @@ class Universe:
 
         start_pos_horizontal = self.center_of_mass_horizontal()
         
-        for i, t_ in tqdm(enumerate(t), leave = False):
+        for i, t_ in tqdm(enumerate(t), total = length, leave = False):
             # do integration step
             energies = self.integration_step(t=t_, verbose=verbose)
             
