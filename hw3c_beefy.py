@@ -5,10 +5,11 @@ def main():
     # (depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, mutat_prob = 0.05, damping=0.05, 
     #                         constant_max = 1):
     depth = 6
-    N = 3
-    pop_size = 5
-    num_gens = 5
-    T = 3
+    N = 10
+    side_length = 1
+    pop_size = 50
+    num_gens = 100
+    T = 5
     dt = 0.0001
     truncation_p = 0.5
     mutation_prob = 0.25
@@ -16,7 +17,7 @@ def main():
 
     results = genetic_programming(depth, N, pop_size, num_gens, T, dt = dt,
                                   p = truncation_p, mutat_prob = mutation_prob,
-                                  damping = damping)
+                                  damping = damping, side_length = side_length)
     population, best_dist_list, best_genome_list, diversity_list = results
     
     print(f'best dist list:{best_dist_list}\n')

@@ -1142,7 +1142,7 @@ def get_dist_helper(T, dt, genome, damping,
 
 ### Crossover and anti-crowding
 def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, mutat_prob = 0.05, damping=0.05, 
-                        constant_max = 1):
+                        constant_max = 1, side_length = 1):
     # generate starting populations
     population = []
 
@@ -1150,7 +1150,7 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
     while pop_count < pop_size:
   
         new_genome = generate_genome(depth, constant_max)
-        new_dist = get_dist_helper(T, dt, new_genome, damping)
+        new_dist = get_dist_helper(T, dt, new_genome, damping, N = N, side_length =side_length)
 
 
         population.append( [new_dist, new_genome] )
@@ -1184,7 +1184,7 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
             # print(new_genome)
             # print()
 
-            new_dist = get_dist_helper(T, dt, genome, damping)
+            new_dist = get_dist_helper(T, dt, genome, damping, N = N, side_length =side_length)
             population.append([new_dist, new_genome])
 
 
@@ -1208,8 +1208,8 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
             # print(offspring_1, offspring_2)
             # print()
 
-            offspring_1_dist = get_dist_helper(T, dt, offspring_1, damping)
-            offspring_2_dist = get_dist_helper(T, dt, offspring_2, damping)
+            offspring_1_dist = get_dist_helper(T, dt, offspring_1, damping, N = N, side_length =side_length)
+            offspring_2_dist = get_dist_helper(T, dt, offspring_2, damping, N = N, side_length =side_length)
 
             
             parents = [(idx_1, parent_1, parent_1_dist),
@@ -1273,7 +1273,9 @@ def genetic_programming(depth, N, pop_size, num_gens, T, dt = 0.0001, p = 0.5, m
         print('population size', len(population))
         print(population)
         
-        diversity_list.append(diversity(population))
+        diversity_current = diversity_population
+        diversity_list.append(diversity_current)
+        print('diversity:', diversity_current)
         
         # optional: update p
     return population, best_dist_list, best_genome_list, diversity_list
